@@ -84,8 +84,8 @@ def convert_mth_strings ( mth_string ):
 
 #### VARIABLES 1.0
 
-entity_id = "E4402_DMBC_gov"
-url = 'http://www.doncaster.gov.uk/services/the-council-democracy/local-transparency-payments-to-suppliers'
+entity_id = "E5014_HAFLBC_gov"
+url = 'https://www.lbhf.gov.uk/councillors-and-democracy/data-and-information/transparency/procurement-and-financial-data'
 errors = 0
 data = []
 
@@ -98,32 +98,24 @@ soup = BeautifulSoup(html, 'lxml')
 
 #### SCRAPE DATA
 
-block = soup.find('div', attrs = {'class':'content content-primary col-xs-12 col-md-8'}).find('ul')
+block = soup.find('section', attrs = {'class':'col-section body'}).find_all('ul')[1]
 links = block.find_all('a', href =True)
 for link in links:
-    csvfile = link.text
-    if 'Payment to suppliers' in csvfile:
-        links_url = 'http://www.doncaster.gov.uk' + link['href'].replace('../../..', '')
-        html_csv = urllib2.urlopen(links_url)
-        soup_csv = BeautifulSoup(html_csv, 'lxml')
-        blocks_csv = soup_csv.find_all('a')
-        for block_csv in blocks_csv:
-            if 'Payment' in block_csv.text:
-                if '.csv' in block_csv['href']:
-                    url = block_csv['href']
-                    csvfiles = block_csv.text
-                    csvMth = csvfiles.split(' ')[-2].strip()[:3]
-                    csvYr = csvfiles.split(' ')[-1].strip()
-                    csvMth = convert_mth_strings(csvMth.upper())
-                    data.append([csvYr, csvMth, url])
-            if 'Published Spend' in block_csv.text:
-                if '.csv' in block_csv['href']:
-                    url = block_csv['href']
-                    csvfiles = block_csv.text
-                    csvMth = csvfiles.replace(u'\xa0', ' ').split(' ')[-2].strip()[:3]
-                    csvYr = csvfiles.replace(u'\xa0', ' ').split(' ')[-1].strip()
-                    csvMth = convert_mth_strings(csvMth.upper())
-                    data.append([csvYr, csvMth, url])
+    if '.xlsx' in link['href']:
+        url = 'https://www.lbhf.gov.uk' + link['href']
+        csvfiles = link.text
+        q_name = int(csvfiles.split('Q')[-1].split(' ')[0].strip())
+        csvYr = csvfiles.split('/')[0].split(' ')[-1].strip()
+        if q_name == 4:
+            q_name = 4-3
+            csvMth = 'Q' + str(q_name)
+            csvYr = str(int(csvYr) + 1)
+        else:
+            q_name = q_name+1
+            csvMth = 'Q' + str(q_name)
+        csvMth = convert_mth_strings(csvMth.upper())
+        data.append([csvYr, csvMth, url])
+
 
 
 #### STORE DATA 1.0
